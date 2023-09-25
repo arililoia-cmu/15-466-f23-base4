@@ -99,7 +99,20 @@ void DrawLines::draw_text(std::string const &text, glm::vec3 const &anchor_in, g
 		uint32_t end = start;
 		uint32_t glyph = -1U;
 		while (end < text.size()) {
+
+			// while the end of match is less htna the end of the text
+			// pull out a substring and see fi it matches
+			// if you ever dont see it in the glyph map shrink down the range and bail out
+			//. taking the largest range it can find in glyphma[]
+			
+			// why will this code
 			end += 1;
+
+			// start=0, end-start=1
+			// substring starting at 0 with 1 character is a
+			// font.glyph_map.find(a) is nothing
+			// was 1 before, we decrement, end is 0, we break out of loop, we dont have a 
+			// glpyh so we render tofu.
 			auto f = PathFont::font.glyph_map.find(text.substr(start, end-start));
 			if (f == PathFont::font.glyph_map.end()) {
 				end -= 1;
@@ -107,6 +120,8 @@ void DrawLines::draw_text(std::string const &text, glm::vec3 const &anchor_in, g
 			}
 			glyph = f->second;
 		}
+		// ^^ not match apcd our of our glyphmap?
+		/// "Notice that this code translates directly from bytes" .. question in lecture
 		if (glyph == -1U) {
 			assert(start == end);
 			end += 1;
