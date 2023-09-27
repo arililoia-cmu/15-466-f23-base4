@@ -5,11 +5,17 @@
 #include <hb-ft.h>
 
 #include <iostream>
-
+#include <iterator>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
 
 #define CHAR_DIM  50*64
 // char resolution
 #define CHAR_RESOLUTION 38
+#define MAX_QUESTION_BITMAP_LENGTH 500
+#define MAX_QUESTION_BITMAP_HEIGHT 200
 // ^ this is the smallest char resolution can be without an error getting thrown
 
 //This file exists to check that programs that use freetype / harfbuzz link properly in this base code.
@@ -22,36 +28,118 @@
 // https://github.com/harfbuzz/harfbuzz-tutorial/blob/master/hello-harfbuzz-freetype.c
 
 
+struct Choice {
+	int dest_page;
+	std::string option;
+};
 
+struct Page{
+	int page_number;
+	std::string page_text;
+	std::vector<Choice> page_choices;
+};
 
-// draw_bitmap taken from here:
-// https://freetype.org/freetype2/docs/tutorial/example1.c
-// void draw_bitmap( FT_Bitmap*  bitmap, FT_Int  x, FT_Int y) {
+// void draw_bitmap( FT_Bitmap* bitmap, FT_Int x, FT_Int y){
 //   FT_Int  i, j, p, q;
 //   FT_Int  x_max = x + bitmap->width;
 //   FT_Int  y_max = y + bitmap->rows;
+
+
 //   /* for simplicity, we assume that `bitmap->pixel_mode' */
 //   /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+
 //   for ( i = x, p = 0; i < x_max; i++, p++ ){
 //     for ( j = y, q = 0; j < y_max; j++, q++ ){
-//       if ( i < 0 || j < 0  || i >= WIDTH || j >= HEIGHT )
+//       if ( i < 0  || j < 0 || i >= WIDTH || j >= HEIGHT )
 //         continue;
 //       image[j][i] |= bitmap->buffer[q * bitmap->width + p];
 //     }
 //   }
 // }
 
-// void show_image( void ){
-//   int  i, j;
-//   for ( i = 0; i < HEIGHT; i++ ){
-//     for ( j = 0; j < WIDTH; j++ ){
-// 		putchar( image[i][j] == 0 ? ' ' : image[i][j] < 128 ? '+'  : '*' ); 
+// char whole_bitmap[MAX_QUESTION_BITMAP_LENGTH][MAX_QUESTION_BITMAP_HEIGHT];
+
+// void insert_into_whole_bitmap(int pen_x, int pen_y, FT_Bitmap bitmap){
+// 	// int rows = bitmap->rows;
+// 	// int width = bitmap->width
+// 	int acc = 0;
+// 	for (int row = pen_x; row < (bitmap->rows + pen_x); row++){
+// 		for (int col = pen_y; col < (bitmap->width + pen_y); col++){
+// 			whole_bitmap[row][col] = bitmap.buffer[acc];
+// 			acc++;
+// 		}
 // 	}
-// 	putchar( '\n' );
-//   }
 // }
 
+
+
 int main(int argc, char **argv) {
+
+
+	std::ifstream file("choices.csv");
+	if (!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+        return 1;
+    }
+
+	// 
+	std::string choice_row;
+	std::string choice_element;
+	int acc = 0;
+
+	std::vector<Page> Story;
+	
+
+	while(std::getline(file, choice_row, '\n')) {
+		
+		// would be better to allocate everything in memory first given
+		// the number of csv rows
+
+		Page one_page;
+		std::vector<Choice> page_choices;
+		Choice one_choice;
+
+		// csv reading code inspired by:
+		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
+		std::istringstream stream(choice_row);
+		while (std::getline(stream, choice_element, ',')) {
+			// tokens.push_back(choice_element);
+			// std::cout << choice_element << std::endl;
+			if (acc == 0){
+				one_page.page_number = stoi(choice_element);
+			}
+			else if (acc == 1){
+				one_page.page_text = choice_element;
+			}
+			else{
+				if (acc%2 == 0){
+					one_choice.dest_page = stoi(choice_element);
+				}
+				else if (acc%2 == 1){
+					one_choice.option = choice_element;
+					page_choices.push_back(one_choice);
+				}
+			}
+			acc++;
+		}
+		one_page.page_choices = page_choices;
+		Story.push_back(one_page);
+		acc = 0;
+	
+	}
+	// std::cout << "Story[0].page_number: " << Story[0].page_number  << std::endl;
+	// std::cout << "Story[0].page_text: " << Story[0].page_text  << std::endl;
+	// std::cout << "Story[0].page_choices.size(): " << Story[0].page_choices.size()  << std::endl;
+	// for (int i=0; i<Story[0].page_choices.size(); i++){
+	// 	std::cout << Story[0].page_choices[i].dest_page << std::endl;
+	// }
+	
+	file.close();
+
+	
+
+
+
 
 	std::cout << " " << std::endl;
 	std::cout << " " << std::endl;
@@ -96,7 +184,7 @@ int main(int argc, char **argv) {
 	// input buffer is a sequence of Unicode codepoints, with associated attributes such as direction and script
 	// after shaping  - the hold output glyphs.
 	// output buffer is a sequence of glyphs, with associated attributes such as position and cluster.
-	const char *text = "test";
+	const char *text = "te\nst";
 	// hb_buffer_add_utf8(buffer, text, text length, item offset, item length)
 	// replaces invalid utf-8 chars with the buffer replacement codepoint
 	hb_buffer_add_utf8(hb_buffer, text, -1, 0, -1);
@@ -129,11 +217,65 @@ int main(int argc, char **argv) {
 	std::cout << "positions_len: " << positions_len << std::endl;
 
 	// only here so that i don't get compiler errors when these values not used
-	if((g_info == nullptr) || (g_pos == nullptr)){
-		std::cout << std::endl;
+	// if((g_info == nullptr) || (g_pos == nullptr)){
+	// 	std::cout << std::endl;
+	// }
+	printf("Raw buffer contents:\n");
+	for (unsigned int i = 0; i < buffer_len; i++)
+	{
+		hb_codepoint_t gid   = g_info[i].codepoint;
+		unsigned int cluster = g_info[i].cluster;
+		double x_advance = g_pos[i].x_advance / 64.;
+		double y_advance = g_pos[i].y_advance / 64.;
+		double x_offset  = g_pos[i].x_offset / 64.;
+		double y_offset  = g_pos[i].y_offset / 64.;
+
+		char glyphname[32];
+		hb_font_get_glyph_name (hb_font, gid, glyphname, sizeof (glyphname));
+
+		printf("glyph='%s'	cluster=%d	advance=(%g,%g)	offset=(%g,%g)\n",
+				glyphname, cluster, x_advance, y_advance, x_offset, y_offset);
 	}
+
+	printf ("Converted to absolute positions:\n");
+  /* And converted to absolute positions. */
+  {
+    double current_x = 0;
+    double current_y = 0;
+    for (unsigned int i = 0; i < buffer_len; i++)
+    {
+      hb_codepoint_t gid   = g_info[i].codepoint;
+      unsigned int cluster = g_info[i].cluster;
+      double x_position = current_x + g_pos[i].x_offset / 64.;
+      double y_position = current_y + g_pos[i].y_offset / 64.;
+
+
+      char glyphname[32];
+      hb_font_get_glyph_name (hb_font, gid, glyphname, sizeof (glyphname));
+
+      printf ("glyph='%s'	cluster=%d	position=(%g,%g)\n",
+	      glyphname, cluster, x_position, y_position);
+
+      current_x += g_pos[i].x_advance / 64.;
+      current_y += g_pos[i].y_advance / 64.;
+    }
+  }
+
+
+
+
 	
-	std::cout << "pos[1].x_advance: " << g_pos[1].x_advance << std::endl;
+	for (int i=0; i<positions_len; i++){
+		std::cout << "pos[" << i << "].x_advance: " << g_pos[i].x_advance << std::endl;
+		std::cout << "pos[" << i << "].y_advance: " << g_pos[i].y_advance << std::endl;
+		std::cout << "pos[" << i << "].x_offset: " << g_pos[i].x_offset << std::endl;
+		std::cout << "pos[" << i << "].y_offset: " << g_pos[i].y_offset << std::endl;
+	// std::cout << "pos[0].x_advance: " << g_pos[0].y_advance << std::endl;
+
+	}
+	// std::cout << "pos[0].x_advance: " << g_pos[0].x_advance << std::endl;
+	// std::cout << "pos[0].x_advance: " << g_pos[0].y_advance << std::endl;
+	
 	// IDEA - working with line breaks.. instead of creating a new buffer every time,
 	// we can edit this value?
 
@@ -144,40 +286,42 @@ int main(int argc, char **argv) {
 
 	FT_GlyphSlot slot = face->glyph;
 	// FT_UInt glyph_index;
-	// int pen_x = 0;
-	// int pen_y = 0;
+	// int pen_x = 10;
+	// int pen_y = 10;
 
 	for (int i=0; i<info_len; i++){
 		// load glyph into face glyph slot
 		// could use FT_load_char instead
 		// don't have to call everything explicitly
 		// but will do so for debugging
+		FT_UInt  glyph_index;
 
+		/* retrieve glyph index from character code */
+		glyph_index = FT_Get_Char_Index(face, text[i]);
 
-		// why did this not work and that did work?
-		/*
-		glyph_index =  FT_Get_Char_Index(face, text[i]);
-		if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) != 0){
-			std::cout << "glyph loading failed" << std::endl;
-		}
-		// render glyph as bitmap
-		if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO) != 0){
-			std::cout << "glyph rendering failed" << std::endl;
-		}
-		*/
-		if (FT_Load_Char( face, text[i], FT_LOAD_RENDER ) != 0){
+		/* load glyph image into the slot (erase previous one) */
+		int error = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
+		if ( error )
+			continue;  /* ignore errors */
+
+		/* convert to an anti-aliased bitmap */
+		error = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
+		if ( error )
 			continue;
-		}
 
+		// if (FT_Load_Char( face, text[i], FT_LOAD_RENDER ) != 0){
+		// 	continue;
+		// }
 
 		std::cout << i << std::endl;
 		std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
 		std::cout << "slot->bitmap.rows: " << slot->bitmap.rows << std::endl;
-		// for (int j=0; j<(slot->bitmap.width*slot->bitmap.rows); j++){
-		// 	// putchar(slot->bitmap.buffer[j]);
-		// 	// putchar( slot->bitmap.buffer[j] == 0 ? ' ' : image[i][j] < 128 ? '+'  : '*' ); 
-		// 	putchar(slot->bitmap.buffer[j] == 0 ? ' ' : '*'); 
-		// }
+		std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
+		std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
+
+		// insert_into_whole_bitmap(slot->bitmap, pen_x, pen_y);
+		// pen_x += slot->bitmap.width
+
 		int acc = 0;
 		for (int j=0; j<slot->bitmap.rows; j++){
 			for (int m=0; m<slot->bitmap.width; m++){

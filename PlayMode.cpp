@@ -235,12 +235,23 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//----------------------------------------------
 	//Test code: draw a textured quad!
 	//based -- in part -- on code from LitColorTextureProgram
-	std::vector< glm::u8vec4 > tex_data{
-			glm::u8vec4(0xff, 0x00, 0x00, 0xff), glm::u8vec4(0x44, 0x44, 0x44, 0xff),
-			glm::u8vec4(0x44, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0xff, 0x00, 0xff),
-			glm::u8vec4(0xf4, 0x00, 0x00, 0xff), glm::u8vec4(0x42, 0x04, 0x44, 0xff),
-			glm::u8vec4(0x94, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0x8f, 0x00, 0xff)
-		};
+
+	// generate huge tex_data
+	std::vector< glm::u8vec4 > tex_data;
+	for (int i=0; i<307200; i++){
+		tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
+		tex_data.push_back(glm::u8vec4(0xff, 0x00, 0x00, 0xff));
+		tex_data.push_back(glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+	}
+
+
+
+	// std::vector< glm::u8vec4 > tex_data{
+	// 		glm::u8vec4(0xff, 0x00, 0x00, 0xff), glm::u8vec4(0x44, 0x44, 0x44, 0xff),
+	// 		glm::u8vec4(0x44, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0xff, 0x00, 0xff),
+	// 		glm::u8vec4(0xf4, 0x00, 0x00, 0xff), glm::u8vec4(0x42, 0x04, 0x44, 0xff),
+	// 		glm::u8vec4(0x94, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0x8f, 0x00, 0xff)
+	// 	};
 		
 
 	static GLuint tex = 0;
@@ -250,7 +261,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		glBindTexture(GL_TEXTURE_2D, tex);
 
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.data());
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.data());
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
