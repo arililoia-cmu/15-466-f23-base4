@@ -1,3 +1,5 @@
+
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -11,12 +13,28 @@
 #include <vector>
 #include <string>
 
-#define FONT_SIZE  50
+#define FONT_SIZE  25
 #define FONT_SCALE 64
 // char resolution
 #define CHAR_RESOLUTION 38
 #define MAX_QUESTION_BITMAP_LENGTH 100
 #define MAX_QUESTION_BITMAP_HEIGHT 50
+
+
+#define WIDTH   100
+#define HEIGHT  57
+#define PEN_X_START 59 * 32
+#define PEN_Y_START 50 * 32
+
+
+
+/* origin is the upper left corner */
+unsigned char image[HEIGHT][WIDTH];
+// #define CHAR_DIM 25 * 64
+// #define CHAR_RESOLUTION 100
+// #define PEN_X_START 59 * 32
+// #define PEN_Y_START 50 * 32
+
 // ^ this is the smallest char resolution can be without an error getting thrown
 
 //This file exists to check that programs that use freetype / harfbuzz link properly in this base code.
@@ -28,6 +46,37 @@
 // code inspired by:
 // https://github.com/harfbuzz/harfbuzz-tutorial/blob/master/hello-harfbuzz-freetype.c
 
+void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
+ 
+  FT_Int  i, j, p, q;
+  FT_Int  x_max = x + bitmap->width;
+  FT_Int  y_max = y + bitmap->rows;
+
+
+  /* for simplicity, we assume that `bitmap->pixel_mode' */
+  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+  std::cout << "x, xmax =  " << x << " " << x_max << std::endl;
+  std::cout << "y, ymax =  " << y << " " << y_max << std::endl;
+
+  for ( i = x, p = 0; i < x_max; i++, p++ ){
+    for ( j = y, q = 0; j < y_max; j++, q++ ){
+      if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ){
+		continue;
+	  }
+      image[j][i] |= bitmap->buffer[q * bitmap->width + p];
+    }
+  }
+}
+
+void show_image( void ){
+  int  i, j;
+  for ( i = 0; i < HEIGHT; i++ ){
+    for ( j = 0; j < WIDTH; j++ ){
+		putchar( image[i][j] == 0 ? ' ' : image[i][j] < 128 ? '+' : '*' );
+	}
+    putchar( '\n' );
+  }
+}
 
 struct Choice {
 	int dest_page;
@@ -57,21 +106,6 @@ struct Page{
 //     }
 //   }
 // }
-
-char whole_bitmap[MAX_QUESTION_BITMAP_LENGTH][MAX_QUESTION_BITMAP_HEIGHT];
-
-// void insert_into_whole_bitmap(int pen_x, int pen_y, FT_Bitmap bitmap){
-// 	// int rows = bitmap->rows;
-// 	// int width = bitmap->width
-// 	int acc = 0;
-// 	for (int row = pen_x; row < (bitmap.rows + pen_x); row++){
-// 		for (int col = pen_y; col < (bitmap.width + pen_y); col++){
-// 			whole_bitmap[row][col] = bitmap.buffer[acc];
-// 			acc++;
-// 		}
-// 	}
-// }
-
 
 
 int main(int argc, char **argv) {
@@ -266,8 +300,9 @@ int main(int argc, char **argv) {
 
 	FT_GlyphSlot slot = face->glyph;
 
-	int pen_x = 5;
-	int pen_y = 5;
+	FT_Vector     pen;   
+	pen.x = PEN_X_START;
+    pen.y = PEN_Y_START;
 
 	for (int i=0; i<info_len; i++){
 		// load glyph into face glyph slot
@@ -279,36 +314,44 @@ int main(int argc, char **argv) {
 		/* retrieve glyph index from character code */
 		// glyph_index = FT_Get_Char_Index(face, text[i]);
 		// FT_UInt glyph_index = (FT_UInt)(g_info[i].codepoint);
+		FT_Set_Transform( face, NULL, &pen );
 
 		/* load glyph image into the slot (erase previous one) */
 		int error = FT_Load_Glyph(face, (FT_ULong)(g_info[i].codepoint), FT_LOAD_RENDER );
 		if ( error )
 			continue;  /* ignore errors */
 
+		int target_height = HEIGHT;
 		
+		draw_bitmap( &slot->bitmap,
+                 slot->bitmap_left,
+                 target_height - slot->bitmap_top );
 
-		std::cout << i << std::endl;
+		/* increment pen position */
+		pen.x += slot->advance.x;
+		pen.y += slot->advance.y;
+		// std::cout << i << std::endl;
 		// std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
 		// std::cout << "slot->bitmap.rows: " << slot->bitmap.rows << std::endl;
 		// std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
 		// std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
 
-		int acc = 0;
-		for (int row = pen_x; row < (slot->bitmap.rows + pen_x); row++){
-			for (int col = pen_y; col < (slot->bitmap.width + pen_y); col++){
-				whole_bitmap[row][col] = slot->bitmap.buffer[acc];
-				acc++;
-			}
-		}
-		pen_y += 20;
-		for (int row=0; row<MAX_QUESTION_BITMAP_HEIGHT; row++){
-			for (int col=0; col<MAX_QUESTION_BITMAP_LENGTH; col++){
-				// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
-				putchar(whole_bitmap[row][col]== 0 ? ' ' : '*');
-				// acc++;
-			}
-			std::cout << std::endl;
-		}
+		// int acc = 0;
+		// for (int row = pen.x; row < (slot->bitmap.rows + pen.x); row++){
+		// 	for (int col = pen.y; col < (slot->bitmap.width + pen.y); col++){
+		// 		whole_bitmap[row][col] = slot->bitmap.buffer[acc];
+		// 		acc++;
+		// 	}
+		// }
+		// pen.y += 20;
+		// for (int row=0; row<MAX_QUESTION_BITMAP_HEIGHT; row++){
+		// 	for (int col=0; col<MAX_QUESTION_BITMAP_LENGTH; col++){
+		// 		// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
+		// 		putchar(whole_bitmap[row][col]== 0 ? ' ' : '*');
+		// 		// acc++;
+		// 	}
+		// 	std::cout << std::endl;
+		// }
 		
 
 		// for (int row = pen_x; row < (slot->bitmap.rows + pen_x); row++){
@@ -339,7 +382,7 @@ int main(int argc, char **argv) {
 
 
 	}
-
+	show_image();
 
 
 	// iterate over info to get glyph indices
