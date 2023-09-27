@@ -6,13 +6,12 @@
 
 #include <iostream>
 
-#define FONT_SIZE 36
-#define CHAR_DIM  50 * 64
+
+#define CHAR_DIM  50*64
 // char resolution
-#define CHAR_RESOLUTION 100
+#define CHAR_RESOLUTION 38
 // ^ this is the smallest char resolution can be without an error getting thrown
-#define WIDTH  50 * 64 * 4
-#define HEIGHT  50 * 64
+
 //This file exists to check that programs that use freetype / harfbuzz link properly in this base code.
 //You probably shouldn't be looking here to learn to use either library.
 
@@ -21,36 +20,36 @@
 
 // code inspired by:
 // https://github.com/harfbuzz/harfbuzz-tutorial/blob/master/hello-harfbuzz-freetype.c
-unsigned char image[HEIGHT][WIDTH];
+
 
 
 
 // draw_bitmap taken from here:
 // https://freetype.org/freetype2/docs/tutorial/example1.c
-void draw_bitmap( FT_Bitmap*  bitmap, FT_Int  x, FT_Int y) {
-  FT_Int  i, j, p, q;
-  FT_Int  x_max = x + bitmap->width;
-  FT_Int  y_max = y + bitmap->rows;
-  /* for simplicity, we assume that `bitmap->pixel_mode' */
-  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
-  for ( i = x, p = 0; i < x_max; i++, p++ ){
-    for ( j = y, q = 0; j < y_max; j++, q++ ){
-      if ( i < 0 || j < 0  || i >= WIDTH || j >= HEIGHT )
-        continue;
-      image[j][i] |= bitmap->buffer[q * bitmap->width + p];
-    }
-  }
-}
+// void draw_bitmap( FT_Bitmap*  bitmap, FT_Int  x, FT_Int y) {
+//   FT_Int  i, j, p, q;
+//   FT_Int  x_max = x + bitmap->width;
+//   FT_Int  y_max = y + bitmap->rows;
+//   /* for simplicity, we assume that `bitmap->pixel_mode' */
+//   /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+//   for ( i = x, p = 0; i < x_max; i++, p++ ){
+//     for ( j = y, q = 0; j < y_max; j++, q++ ){
+//       if ( i < 0 || j < 0  || i >= WIDTH || j >= HEIGHT )
+//         continue;
+//       image[j][i] |= bitmap->buffer[q * bitmap->width + p];
+//     }
+//   }
+// }
 
-void show_image( void ){
-  int  i, j;
-  for ( i = 0; i < HEIGHT; i++ ){
-    for ( j = 0; j < WIDTH; j++ ){
-		putchar( image[i][j] == 0 ? ' ' : image[i][j] < 128 ? '+'  : '*' ); 
-	}
-	putchar( '\n' );
-  }
-}
+// void show_image( void ){
+//   int  i, j;
+//   for ( i = 0; i < HEIGHT; i++ ){
+//     for ( j = 0; j < WIDTH; j++ ){
+// 		putchar( image[i][j] == 0 ? ' ' : image[i][j] < 128 ? '+'  : '*' ); 
+// 	}
+// 	putchar( '\n' );
+//   }
+// }
 
 int main(int argc, char **argv) {
 
