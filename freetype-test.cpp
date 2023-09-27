@@ -30,10 +30,7 @@
 
 /* origin is the upper left corner */
 unsigned char image[HEIGHT][WIDTH];
-// #define CHAR_DIM 25 * 64
-// #define CHAR_RESOLUTION 100
-// #define PEN_X_START 59 * 32
-// #define PEN_Y_START 50 * 32
+
 
 // ^ this is the smallest char resolution can be without an error getting thrown
 
@@ -88,24 +85,6 @@ struct Page{
 	std::string page_text;
 	std::vector<Choice> page_choices;
 };
-
-// void draw_bitmap( FT_Bitmap* bitmap, FT_Int x, FT_Int y){
-//   FT_Int  i, j, p, q;
-//   FT_Int  x_max = x + bitmap->width;
-//   FT_Int  y_max = y + bitmap->rows;
-
-
-//   /* for simplicity, we assume that `bitmap->pixel_mode' */
-//   /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
-
-//   for ( i = x, p = 0; i < x_max; i++, p++ ){
-//     for ( j = y, q = 0; j < y_max; j++, q++ ){
-//       if ( i < 0  || j < 0 || i >= WIDTH || j >= HEIGHT )
-//         continue;
-//       image[j][i] |= bitmap->buffer[q * bitmap->width + p];
-//     }
-//   }
-// }
 
 
 int main(int argc, char **argv) {
@@ -330,136 +309,10 @@ int main(int argc, char **argv) {
 		/* increment pen position */
 		pen.x += slot->advance.x;
 		pen.y += slot->advance.y;
-		// std::cout << i << std::endl;
-		// std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
-		// std::cout << "slot->bitmap.rows: " << slot->bitmap.rows << std::endl;
-		// std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
-		// std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
-
-		// int acc = 0;
-		// for (int row = pen.x; row < (slot->bitmap.rows + pen.x); row++){
-		// 	for (int col = pen.y; col < (slot->bitmap.width + pen.y); col++){
-		// 		whole_bitmap[row][col] = slot->bitmap.buffer[acc];
-		// 		acc++;
-		// 	}
-		// }
-		// pen.y += 20;
-		// for (int row=0; row<MAX_QUESTION_BITMAP_HEIGHT; row++){
-		// 	for (int col=0; col<MAX_QUESTION_BITMAP_LENGTH; col++){
-		// 		// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
-		// 		putchar(whole_bitmap[row][col]== 0 ? ' ' : '*');
-		// 		// acc++;
-		// 	}
-		// 	std::cout << std::endl;
-		// }
-		
-
-		// for (int row = pen_x; row < (slot->bitmap.rows + pen_x); row++){
-		// 	for (int col = pen_y; col < (slot->bitmap.width + pen_y); col++){
-		// 		whole_bitmap[row][col] = slot->bitmap.buffer[acc];
-		// 		acc++;
-		// 	}
-		// }
-	
-		// pen_y += (int)(g_pos[i].x_advance / 64.);
-
-		// // int acc = 0;
-		// for (int j=0; j<MAX_QUESTION_BITMAP_HEIGHT; j++){
-		// 	for (int m=0; m<MAX_QUESTION_BITMAP_LENGTH; m++){
-		// 		// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
-		// 		putchar(whole_bitmap[j][m]== 0 ? ' ' : '*');
-		// 		// acc++;
-		// 	}
-		// 	std::cout << std::endl;
-		// }
-
-
-		// draw_bitmap( &slot->bitmap,
-        // //           pen_x + slot->bitmap_left,
-        // //           pen_y - slot->bitmap_top );
-		// pen_x += slot->advance.x >> 6;
-		// pen_y += slot->advance.y >> 6;
-
 
 	}
 	show_image();
 
-
-	// iterate over info to get glyph indices
-	// pass glyph index into FT_Load_Glyph
-	// use FT_Render_Glyph to convert to bitmap
-	// Once you have a bitmapped glyph image, you can access it directly through glyph->bitmap 
-	// FT_UInt glyph_index;
-	// FT_GlyphSlot slot = face->glyph;
-	// FT_Vector pen;
-	// pen.x = 300;
-	// pen.y = 200;
-	// int my_target_height = 10;
-	// for (int i=0; i<info_len; i++){
-		
-	// 	// slot->glyph_index = 
-	// 	// transform the thing based on the pen
-	// 	// we use null for the matrix as we're just translating
-	// 	FT_Set_Transform(face, NULL, &pen);
-		
-	// 	// load glyph into face glyph slot
-	// 	glyph_index =  FT_Get_Char_Index(face, text[i]);
-	// 	if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) != 0){
-	// 		std::cout << "glyph loading failed" << std::endl;
-	// 	}
-	// 	// render glyph as bitmap
-	// 	if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL) != 0){
-	// 		std::cout << "glyph rendering failed" << std::endl;
-	// 	}
-
-	// 	draw_bitmap( &slot->bitmap,
-    //               slot->bitmap_left,
-    //               my_target_height - slot->bitmap_top );
-
-	// 	pen.x += slot->advance.x;
-	// 	pen.y += slot->advance.y;
-	// }
-
-	// print bitmap
-	// show_image();
-	// for (int i=0; i<HEIGHT; i++){
-	// 	std::cout << i << ": ";
-	// 	for (int j=0; j<WIDTH; j++){
-	// 		std::cout << (char)image[i][j];
-	// 	}
-	// 	std::cout << std::endl;
-	// }
-
-	
-
-
-
-	// for (int i=0; i<info_len; i++){
-	// 	// load glyph into face glyph slot
-	// 	// could use FT_load_char instead
-	// 	// don't have to call everything explicitly
-	// 	// but will do so for debugging
-	// 	glyph_index =  FT_Get_Char_Index(face, text[i]);
-	// 	if (FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT) != 0){
-	// 		std::cout << "glyph loading failed" << std::endl;
-	// 	}
-	// 	// render glyph as bitmap
-	// 	if (FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL) != 0){
-	// 		std::cout << "glyph rendering failed" << std::endl;
-	// 	}
-
-
-	// 	draw_bitmap( &slot->bitmap,
-    //               pen_x + slot->bitmap_left,
-    //               pen_y - slot->bitmap_top );
-
-
-	// }
-
-
-
-
-	
 
 	// in class:
 	FT_Done_FreeType(library);
