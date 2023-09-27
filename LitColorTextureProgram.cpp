@@ -132,6 +132,7 @@ LitColorTextureProgram::LitColorTextureProgram() {
 	//set TEX to always refer to texture binding zero:
 	glUseProgram(program); //bind program -- glUniform* calls refer to this program now
 
+	// if you bind whatever to 0, that's the texture it will use
 	glUniform1i(TEX_sampler2D, 0); //set TEX to sample from GL_TEXTURE0
 
 	glUseProgram(0); //unbind program -- glUniform* calls refer to ??? now

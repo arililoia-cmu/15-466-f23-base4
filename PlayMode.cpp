@@ -235,20 +235,25 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//----------------------------------------------
 	//Test code: draw a textured quad!
 	//based -- in part -- on code from LitColorTextureProgram
+	std::vector< glm::u8vec4 > tex_data{
+			glm::u8vec4(0xff, 0x00, 0x00, 0xff), glm::u8vec4(0x44, 0x44, 0x44, 0xff),
+			glm::u8vec4(0x44, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0xff, 0x00, 0xff),
+			glm::u8vec4(0xf4, 0x00, 0x00, 0xff), glm::u8vec4(0x42, 0x04, 0x44, 0xff),
+			glm::u8vec4(0x94, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0x8f, 0x00, 0xff)
+		};
+		
 
 	static GLuint tex = 0;
 	if (tex == 0) {
 		glGenTextures(1, &tex);
 
 		glBindTexture(GL_TEXTURE_2D, tex);
-		std::vector< glm::u8vec4 > tex_data{
-			glm::u8vec4(0xff, 0x00, 0x00, 0xff), glm::u8vec4(0x44, 0x44, 0x44, 0x00),
-			glm::u8vec4(0x44, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0xff, 0x00, 0x88)
-		};
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.data());
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.data());
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -309,10 +314,16 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//actually draw some textured quads!
 	std::vector< Vert > attribs;
 
-	attribs.emplace_back(glm::vec3(-0.5f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
-	attribs.emplace_back(glm::vec3(-0.5f,  1.0f, 0.0f), glm::vec2(0.0f, 2.0f));
+	// attribs.emplace_back(glm::vec3(-0.5f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+	// attribs.emplace_back(glm::vec3(-0.5f,  1.0f, 0.0f), glm::vec2(0.0f, 2.0f));
+	// attribs.emplace_back(glm::vec3( 1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f));
+	// attribs.emplace_back(glm::vec3( 1.0f,  1.0f, 0.0f), glm::vec2(1.0f, 2.0f));
+
+	attribs.emplace_back(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
+	attribs.emplace_back(glm::vec3(-1.0f,  1.0f, 0.0f), glm::vec2(0.0f, 1.0f));
 	attribs.emplace_back(glm::vec3( 1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f));
-	attribs.emplace_back(glm::vec3( 1.0f,  1.0f, 0.0f), glm::vec2(1.0f, 2.0f));
+	attribs.emplace_back(glm::vec3( 1.0f,  1.0f, 0.0f), glm::vec2(1.0f, 1.0f));
+
 
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vert) * attribs.size(), attribs.data(), GL_STREAM_DRAW);

@@ -90,6 +90,10 @@ void DrawLines::draw_box(glm::mat4x3 const &mat, glm::u8vec4 const &color) {
 	draw(mat * glm::vec4( 1.0f, 1.0f,-1.0f, 1.0f), mat * glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f), color);
 }
 
+// void DrawLines::draw_pixel(){
+
+// }
+
 void DrawLines::draw_text(std::string const &text, glm::vec3 const &anchor_in, glm::vec3 const &x, glm::vec3 const &y, glm::u8vec4 const &color, glm::vec3 *anchor_out) {
 
 	glm::vec3 anchor = anchor_in;

@@ -17,12 +17,15 @@
 struct DrawLines {
 	//Start drawing; will remember world_to_clip matrix:
 	DrawLines(glm::mat4 const &world_to_clip);
+	
 
 	//draw a single line from a to b (in world space):
 	void draw(glm::vec3 const &a, glm::vec3 const &b, glm::u8vec4 const &color = glm::u8vec4(0xff));
 
 	//draw a wireframe box corresponding to the [-1,1]^3 cube transformed by mat:
 	void draw_box(glm::mat4x3 const &mat, glm::u8vec4 const &color = glm::u8vec4(0xff));
+
+	// void draw_
 
 	//draw wireframe text, start at anchor, move in x direction, mat gives x and y directions for text drawing:
 	// (default character box is 1 unit high)
