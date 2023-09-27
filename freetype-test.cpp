@@ -15,33 +15,20 @@
 
 #define FONT_SIZE  25
 #define FONT_SCALE 64
-// char resolution
 #define CHAR_RESOLUTION 38
 #define MAX_QUESTION_BITMAP_LENGTH 100
 #define MAX_QUESTION_BITMAP_HEIGHT 50
-
-
 #define WIDTH   100
 #define HEIGHT  57
-#define PEN_X_START 59 * 32
-#define PEN_Y_START 50 * 32
-
-
-
-/* origin is the upper left corner */
-unsigned char image[HEIGHT][WIDTH];
-
-
-// ^ this is the smallest char resolution can be without an error getting thrown
-
-//This file exists to check that programs that use freetype / harfbuzz link properly in this base code.
-//You probably shouldn't be looking here to learn to use either library.
-
-// do as much of the tasks as you can in this one file in order
-// figure out how to restructure in a nice way in your own code
 
 // code inspired by:
 // https://github.com/harfbuzz/harfbuzz-tutorial/blob/master/hello-harfbuzz-freetype.c
+#define PEN_X_START 59 * 32
+#define PEN_Y_START 50 * 32
+unsigned char image[HEIGHT][WIDTH];
+// ^ this is the smallest char resolution can be without an error getting thrown
+
+
 
 void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
  
@@ -90,35 +77,27 @@ struct Page{
 int main(int argc, char **argv) {
 
 
+	// import choices
 	std::ifstream file("choices.csv");
 	if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
         return 1;
     }
 
-	// 
 	std::string choice_row;
 	std::string choice_element;
 	int acc = 0;
-
 	std::vector<Page> Story;
-	
-
 	while(std::getline(file, choice_row, '\n')) {
-		
 		// would be better to allocate everything in memory first given
 		// the number of csv rows
-
 		Page one_page;
 		std::vector<Choice> page_choices;
 		Choice one_choice;
-
 		// csv reading code inspired by:
 		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
 		std::istringstream stream(choice_row);
 		while (std::getline(stream, choice_element, ',')) {
-			// tokens.push_back(choice_element);
-			// std::cout << choice_element << std::endl;
 			if (acc == 0){
 				one_page.page_number = stoi(choice_element);
 			}
@@ -141,13 +120,6 @@ int main(int argc, char **argv) {
 		acc = 0;
 	
 	}
-	// std::cout << "Story[0].page_number: " << Story[0].page_number  << std::endl;
-	// std::cout << "Story[0].page_text: " << Story[0].page_text  << std::endl;
-	// std::cout << "Story[0].page_choices.size(): " << Story[0].page_choices.size()  << std::endl;
-	// for (int i=0; i<Story[0].page_choices.size(); i++){
-	// 	std::cout << Story[0].page_choices[i].dest_page << std::endl;
-	// }
-	
 	file.close();
 
 	

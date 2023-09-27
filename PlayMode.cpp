@@ -13,6 +13,30 @@
 
 #include <random>
 
+// #include <ft2build.h>
+// #include FT_FREETYPE_H
+
+// #include <hb.h>
+// #include <hb-ft.h>
+
+// #include <iostream>
+// #include <iterator>
+// #include <fstream>
+// #include <sstream>
+// #include <vector>
+// #include <string>
+
+#define FONT_SIZE  25
+#define FONT_SCALE 64
+#define CHAR_RESOLUTION 38
+#define MAX_QUESTION_BITMAP_LENGTH 100
+#define MAX_QUESTION_BITMAP_HEIGHT 50
+#define WIDTH   1280
+#define HEIGHT  720
+#define PEN_X_START 59 * 32
+#define PEN_Y_START 50 * 32
+unsigned char image[HEIGHT][WIDTH];
+
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
 Load< MeshBuffer > hexapod_meshes(LoadTagDefault, []() -> MeshBuffer const * {
 	MeshBuffer const *ret = new MeshBuffer(data_path("hexapod.pnct"));
@@ -41,6 +65,155 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 	return new Sound::Sample(data_path("dusty-floor.opus"));
 });
 
+void PlayMode::load_story(){
+	// import choices
+	std::ifstream file("dist/choices.csv");
+	if (!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+    }
+
+	std::string choice_row;
+	std::string choice_element;
+	int acc = 0;
+	// std::vector<Page> Story;
+	while(std::getline(file, choice_row, '\n')) {
+		// would be better to allocate everything in memory first given
+		// the number of csv rows
+		Page one_page;
+		std::vector<Choice> page_choices;
+		Choice one_choice;
+		// csv reading code inspired by:
+		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
+		std::istringstream stream(choice_row);
+		while (std::getline(stream, choice_element, ',')) {
+			if (acc == 0){
+				one_page.page_number = stoi(choice_element);
+			}
+			else if (acc == 1){
+				one_page.page_text = choice_element;
+			}
+			else{
+				if (acc%2 == 0){
+					one_choice.dest_page = stoi(choice_element);
+				}
+				else if (acc%2 == 1){
+					one_choice.option = choice_element;
+					page_choices.push_back(one_choice);
+				}
+			}
+			acc++;
+		}
+		one_page.page_choices = page_choices;
+		Story.push_back(one_page);
+		acc = 0;
+	
+	}
+	file.close();
+}
+
+void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
+ 
+  FT_Int  i, j, p, q;
+  FT_Int  x_max = x + bitmap->width;
+  FT_Int  y_max = y + bitmap->rows;
+
+
+  /* for simplicity, we assume that `bitmap->pixel_mode' */
+  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+  std::cout << "x, xmax =  " << x << " " << x_max << std::endl;
+  std::cout << "y, ymax =  " << y << " " << y_max << std::endl;
+
+  for ( i = x, p = 0; i < x_max; i++, p++ ){
+    for ( j = y, q = 0; j < y_max; j++, q++ ){
+      if ( i < 0 || j < 0 || i >= WIDTH || j >= HEIGHT ){
+		continue;
+	  }
+      image[j][i] |= bitmap->buffer[q * bitmap->width + p];
+    }
+  }
+}
+
+
+
+// load the page we want to display into an image
+int PlayMode::load_page2display(int page_number){
+
+	if (FT_Init_FreeType( &library ) != 0){
+		std::cerr << "fucked up initailzating freetype " << std::endl;
+		return 1;
+	}
+
+	const char* font_path = "/Users/arililoia/CarnegieMellonCS/game-programming/my-game4/Roboto-Regular.ttf";
+	if (FT_New_Face(library, font_path, 0, &face) != 0){
+		std::cerr << "bad face " << std::endl;
+		return 1;
+	}
+
+	if (FT_Set_Char_Size(face, FONT_SIZE * FONT_SCALE, FONT_SIZE * FONT_SCALE, CHAR_RESOLUTION, 0) != 0){
+		std::cerr << "bad char size " << std::endl;
+		return 1;
+	}
+
+	hb_font_t *hb_font;
+	hb_font = hb_ft_font_create_referenced(face);
+	hb_buffer_t *hb_buffer;
+	hb_buffer = hb_buffer_create();
+
+	// https://stackoverflow.com/questions/347949/how-to-convert-a-stdstring-to-const-char-or-char
+	// std::cout << Story.at(0).page_text << std::endl;
+	const char *text = Story.at(0).page_text.c_str();
+	// std::cout << text << std::endl;
+	hb_buffer_add_utf8(hb_buffer, text, -1, 0, -1);
+	hb_buffer_guess_segment_properties(hb_buffer);
+	hb_shape(hb_font, hb_buffer, NULL, 0);
+
+
+	unsigned int buffer_len = hb_buffer_get_length (hb_buffer);
+	std::cout << "buffer_len: " << buffer_len << std::endl;
+	unsigned int info_len;
+	hb_glyph_info_t *g_info = hb_buffer_get_glyph_infos(hb_buffer, &info_len);
+	std::cout << "info_len: " << info_len << std::endl;
+	// unsigned int positions_len;
+	// hb_glyph_position_t *g_pos = hb_buffer_get_glyph_positions(hb_buffer, &positions_len);
+
+
+	FT_GlyphSlot slot = face->glyph;
+
+	FT_Vector     pen;   
+	pen.x = PEN_X_START;
+    pen.y = PEN_Y_START;
+
+	for (int i=0; i<info_len; i++){
+
+		FT_Set_Transform( face, NULL, &pen );
+
+		/* load glyph image into the slot (erase previous one) */
+		int error = FT_Load_Glyph(face, (FT_ULong)(g_info[i].codepoint), FT_LOAD_RENDER );
+		if ( error )
+			continue;  /* ignore errors */
+
+		int target_height = HEIGHT;
+		
+		draw_bitmap( &slot->bitmap,
+                 slot->bitmap_left,
+                 target_height - slot->bitmap_top );
+
+		/* increment pen position */
+		pen.x += slot->advance.x;
+		pen.y += slot->advance.y;
+
+	}
+	// show_image();
+
+
+	// in class:
+	FT_Done_FreeType(library);
+
+	return 0;
+
+}
+
+
 PlayMode::PlayMode() : scene(*hexapod_scene) {
 	//get pointers to leg for convenience:
 	for (auto &transform : scene.transforms) {
@@ -63,7 +236,15 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	//start music loop playing:
 	// (note: position will be over-ridden in update())
 	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
+
+	load_story();
+	if (load_page2display(0) != 0){
+		std::cout << "no" << std::endl;
+	}
+		
+	std::cout << "Story[0].page_choices[0].option: " << Story[0].page_choices[0].option << std::endl;
 }
+
 
 PlayMode::~PlayMode() {
 }
@@ -238,11 +419,22 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	// generate huge tex_data
 	std::vector< glm::u8vec4 > tex_data;
-	for (int i=0; i<307200; i++){
-		tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
-		tex_data.push_back(glm::u8vec4(0xff, 0x00, 0x00, 0xff));
-		tex_data.push_back(glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+	for (int row=0; row<HEIGHT; row++){
+		for (int col=0; col<WIDTH; col++){
+			if (image[row][col] == 0){
+				tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
+			}else{
+				tex_data.push_back(glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+			}
+		}
 	}
+	// int wxh = (WIDTH * HEIGHT);
+	// for (int i=0; i<wxh; i++){
+	// 	if ()
+	// 	tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
+	// 	tex_data.push_back(glm::u8vec4(0xff, 0x00, 0x00, 0xff));
+	// 	tex_data.push_back(glm::u8vec4(0xff, 0xff, 0xff, 0xff));
+	// }
 
 
 
