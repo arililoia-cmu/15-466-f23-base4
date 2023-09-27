@@ -11,7 +11,8 @@
 #include <vector>
 #include <string>
 
-#define CHAR_DIM  50*64
+#define FONT_SIZE  50
+#define FONT_SCALE 64
 // char resolution
 #define CHAR_RESOLUTION 38
 #define MAX_QUESTION_BITMAP_LENGTH 500
@@ -164,7 +165,7 @@ int main(int argc, char **argv) {
 	// FT_Char_Size(face, char_width, char_height, horz-resoution, vert-resoltion)
 	// setting the width/resolution in 1 dimension to 0 sets it equal to the other dimension
 
-	if (FT_Set_Char_Size(face, CHAR_DIM, 0, CHAR_RESOLUTION, 0) != 0){
+	if (FT_Set_Char_Size(face, FONT_SIZE * FONT_SCALE, FONT_SIZE * FONT_SCALE, CHAR_RESOLUTION, 0) != 0){
 		std::cerr << "bad char size " << std::endl;
 		return 1;
 	}
@@ -251,7 +252,7 @@ int main(int argc, char **argv) {
 
 
       char glyphname[32];
-      hb_font_get_glyph_name (hb_font, gid, glyphname, sizeof (glyphname));
+      hb_font_get_glyph_name(hb_font, gid, glyphname, sizeof(glyphname));
 
       printf ("glyph='%s'	cluster=%d	position=(%g,%g)\n",
 	      glyphname, cluster, x_position, y_position);
@@ -266,7 +267,7 @@ int main(int argc, char **argv) {
 
 	
 	for (int i=0; i<positions_len; i++){
-		std::cout << "pos[" << i << "].x_advance: " << g_pos[i].x_advance << std::endl;
+		std::cout << "pos[" << i << "].x_advance: " << g_pos[i].x_advance/64. << std::endl;
 		std::cout << "pos[" << i << "].y_advance: " << g_pos[i].y_advance << std::endl;
 		std::cout << "pos[" << i << "].x_offset: " << g_pos[i].x_offset << std::endl;
 		std::cout << "pos[" << i << "].y_offset: " << g_pos[i].y_offset << std::endl;
@@ -285,33 +286,24 @@ int main(int argc, char **argv) {
 
 
 	FT_GlyphSlot slot = face->glyph;
-	// FT_UInt glyph_index;
-	// int pen_x = 10;
-	// int pen_y = 10;
 
 	for (int i=0; i<info_len; i++){
 		// load glyph into face glyph slot
 		// could use FT_load_char instead
 		// don't have to call everything explicitly
 		// but will do so for debugging
-		FT_UInt  glyph_index;
+
 
 		/* retrieve glyph index from character code */
-		glyph_index = FT_Get_Char_Index(face, text[i]);
+		// glyph_index = FT_Get_Char_Index(face, text[i]);
+		// FT_UInt glyph_index = (FT_UInt)(g_info[i].codepoint);
 
 		/* load glyph image into the slot (erase previous one) */
-		int error = FT_Load_Glyph( face, glyph_index, FT_LOAD_DEFAULT );
+		int error = FT_Load_Glyph(face, (FT_ULong)(g_info[i].codepoint), FT_LOAD_RENDER );
 		if ( error )
 			continue;  /* ignore errors */
 
-		/* convert to an anti-aliased bitmap */
-		error = FT_Render_Glyph( face->glyph, FT_RENDER_MODE_NORMAL );
-		if ( error )
-			continue;
-
-		// if (FT_Load_Char( face, text[i], FT_LOAD_RENDER ) != 0){
-		// 	continue;
-		// }
+		
 
 		std::cout << i << std::endl;
 		std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
