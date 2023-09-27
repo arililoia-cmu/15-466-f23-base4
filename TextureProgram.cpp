@@ -1,3 +1,5 @@
+// All credit to Jim McCann, September 2021
+
 #include "TextureProgram.hpp"
 
 #include "gl_compile_program.hpp"
