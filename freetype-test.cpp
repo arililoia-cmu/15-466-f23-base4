@@ -15,8 +15,8 @@
 #define FONT_SCALE 64
 // char resolution
 #define CHAR_RESOLUTION 38
-#define MAX_QUESTION_BITMAP_LENGTH 500
-#define MAX_QUESTION_BITMAP_HEIGHT 200
+#define MAX_QUESTION_BITMAP_LENGTH 100
+#define MAX_QUESTION_BITMAP_HEIGHT 50
 // ^ this is the smallest char resolution can be without an error getting thrown
 
 //This file exists to check that programs that use freetype / harfbuzz link properly in this base code.
@@ -58,14 +58,14 @@ struct Page{
 //   }
 // }
 
-// char whole_bitmap[MAX_QUESTION_BITMAP_LENGTH][MAX_QUESTION_BITMAP_HEIGHT];
+char whole_bitmap[MAX_QUESTION_BITMAP_LENGTH][MAX_QUESTION_BITMAP_HEIGHT];
 
 // void insert_into_whole_bitmap(int pen_x, int pen_y, FT_Bitmap bitmap){
 // 	// int rows = bitmap->rows;
 // 	// int width = bitmap->width
 // 	int acc = 0;
-// 	for (int row = pen_x; row < (bitmap->rows + pen_x); row++){
-// 		for (int col = pen_y; col < (bitmap->width + pen_y); col++){
+// 	for (int row = pen_x; row < (bitmap.rows + pen_x); row++){
+// 		for (int col = pen_y; col < (bitmap.width + pen_y); col++){
 // 			whole_bitmap[row][col] = bitmap.buffer[acc];
 // 			acc++;
 // 		}
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 	// input buffer is a sequence of Unicode codepoints, with associated attributes such as direction and script
 	// after shaping  - the hold output glyphs.
 	// output buffer is a sequence of glyphs, with associated attributes such as position and cluster.
-	const char *text = "te\nst";
+	const char *text = "tej";
 	// hb_buffer_add_utf8(buffer, text, text length, item offset, item length)
 	// replaces invalid utf-8 chars with the buffer replacement codepoint
 	hb_buffer_add_utf8(hb_buffer, text, -1, 0, -1);
@@ -239,28 +239,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf ("Converted to absolute positions:\n");
-  /* And converted to absolute positions. */
-  {
-    double current_x = 0;
-    double current_y = 0;
-    for (unsigned int i = 0; i < buffer_len; i++)
-    {
-      hb_codepoint_t gid   = g_info[i].codepoint;
-      unsigned int cluster = g_info[i].cluster;
-      double x_position = current_x + g_pos[i].x_offset / 64.;
-      double y_position = current_y + g_pos[i].y_offset / 64.;
 
-
-      char glyphname[32];
-      hb_font_get_glyph_name(hb_font, gid, glyphname, sizeof(glyphname));
-
-      printf ("glyph='%s'	cluster=%d	position=(%g,%g)\n",
-	      glyphname, cluster, x_position, y_position);
-
-      current_x += g_pos[i].x_advance / 64.;
-      current_y += g_pos[i].y_advance / 64.;
-    }
-  }
 
 
 
@@ -287,6 +266,9 @@ int main(int argc, char **argv) {
 
 	FT_GlyphSlot slot = face->glyph;
 
+	int pen_x = 5;
+	int pen_y = 5;
+
 	for (int i=0; i<info_len; i++){
 		// load glyph into face glyph slot
 		// could use FT_load_char instead
@@ -306,22 +288,47 @@ int main(int argc, char **argv) {
 		
 
 		std::cout << i << std::endl;
-		std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
-		std::cout << "slot->bitmap.rows: " << slot->bitmap.rows << std::endl;
-		std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
-		std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
-
-		// insert_into_whole_bitmap(slot->bitmap, pen_x, pen_y);
-		// pen_x += slot->bitmap.width
+		// std::cout << "slot->bitmap.width: " << slot->bitmap.width << std::endl;
+		// std::cout << "slot->bitmap.rows: " << slot->bitmap.rows << std::endl;
+		// std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
+		// std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
 
 		int acc = 0;
-		for (int j=0; j<slot->bitmap.rows; j++){
-			for (int m=0; m<slot->bitmap.width; m++){
-				putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
+		for (int row = pen_x; row < (slot->bitmap.rows + pen_x); row++){
+			for (int col = pen_y; col < (slot->bitmap.width + pen_y); col++){
+				whole_bitmap[row][col] = slot->bitmap.buffer[acc];
 				acc++;
+			}
+		}
+		pen_y += 20;
+		for (int row=0; row<MAX_QUESTION_BITMAP_HEIGHT; row++){
+			for (int col=0; col<MAX_QUESTION_BITMAP_LENGTH; col++){
+				// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
+				putchar(whole_bitmap[row][col]== 0 ? ' ' : '*');
+				// acc++;
 			}
 			std::cout << std::endl;
 		}
+		
+
+		// for (int row = pen_x; row < (slot->bitmap.rows + pen_x); row++){
+		// 	for (int col = pen_y; col < (slot->bitmap.width + pen_y); col++){
+		// 		whole_bitmap[row][col] = slot->bitmap.buffer[acc];
+		// 		acc++;
+		// 	}
+		// }
+	
+		// pen_y += (int)(g_pos[i].x_advance / 64.);
+
+		// // int acc = 0;
+		// for (int j=0; j<MAX_QUESTION_BITMAP_HEIGHT; j++){
+		// 	for (int m=0; m<MAX_QUESTION_BITMAP_LENGTH; m++){
+		// 		// putchar(slot->bitmap.buffer[acc] == 0 ? ' ' : '*'); 
+		// 		putchar(whole_bitmap[j][m]== 0 ? ' ' : '*');
+		// 		// acc++;
+		// 	}
+		// 	std::cout << std::endl;
+		// }
 
 
 		// draw_bitmap( &slot->bitmap,
