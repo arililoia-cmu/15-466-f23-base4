@@ -37,7 +37,7 @@
 #define MARGIN 30
 #define PEN_X_START (MARGIN * CHAR_RESOLUTION)
 #define PEN_Y_START (HEIGHT - (FONT_SIZE + MARGIN)) * CHAR_RESOLUTION
-#define PAGE_TEXT_END 360
+#define PAGE_TEXT_END 700
 unsigned char image[HEIGHT][WIDTH];
 
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
@@ -70,7 +70,7 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 
 void PlayMode::load_story(){
 	// import choices
-	std::cout << "load story" << std::endl;
+	// std::cout << "load story" << std::endl;
 	std::ifstream file("dist/choices.csv");
 	if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
@@ -83,13 +83,15 @@ void PlayMode::load_story(){
 	while(std::getline(file, choice_row, '\n')) {
 		// would be better to allocate everything in memory first given
 		// the number of csv rows
-		std::cout << "get line of story" << std::endl;
+		// std::cout << "get line of story" << std::endl;
 		Page one_page;
-
+		std::cout << "getting line " << std::endl;
 		// csv reading code inspired by:
 		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
 		std::istringstream stream(choice_row);
 		while (std::getline(stream, choice_element, ',')) {
+			std::cout << acc << std::endl;
+			std::cout << "choice_elementL: " << choice_element << std::endl;
 			if (acc == 0){
 				one_page.page_number = stoi(choice_element);
 			}
@@ -100,13 +102,7 @@ void PlayMode::load_story(){
 				one_page.dest_page_1 = stoi(choice_element);
 			}
 			else if (acc == 3){
-				one_page.option_1 = choice_element;
-			}
-			else if (acc == 4){
 				one_page.dest_page_2 = stoi(choice_element);
-			}
-			else if (acc == 5){
-				one_page.option_2 = choice_element;
 			}
 			acc++;
 		}
@@ -114,7 +110,7 @@ void PlayMode::load_story(){
 		acc = 0;
 	
 	}
-	std::cout << " before file close"  << std::endl;
+	// std::cout << " before file close"  << std::endl;
 	file.close();
 }
 
@@ -150,20 +146,19 @@ void PlayMode::zero_out_image_buffer(){
 }
 
 int PlayMode::load_full_page(int page_number){
-	// std::cout << 'zoob' << std::endl;
 	zero_out_image_buffer();
 	std::cout << "loadfullpage" << std::endl;
 	if (load_page2display(page_number) != 0){
 		return 1;
 	}
+	current_page = page_number;
 	return 0;
-
 }
 
 
 // load the page we want to display into an image
 int PlayMode::load_page2display(int page_number){
-	std::cout << "load_page2display" << std::endl;
+	// std::cout << "load_page2display" << std::endl;
 	if (FT_Init_FreeType( &library ) != 0){
 		std::cerr << "fucked up initailzating freetype " << std::endl;
 		return 1;
@@ -194,11 +189,11 @@ int PlayMode::load_page2display(int page_number){
 	hb_shape(hb_font, hb_buffer, NULL, 0);
 
 
-	unsigned int buffer_len = hb_buffer_get_length (hb_buffer);
-	std::cout << "buffer_len: " << buffer_len << std::endl;
+	// unsigned int buffer_len = hb_buffer_get_length (hb_buffer);
+	// std::cout << "buffer_len: " << buffer_len << std::endl;
 	unsigned int info_len;
 	hb_glyph_info_t *g_info = hb_buffer_get_glyph_infos(hb_buffer, &info_len);
-	std::cout << "info_len: " << info_len << std::endl;
+	// std::cout << "info_len: " << info_len << std::endl;
 	// unsigned int positions_len;
 	// hb_glyph_position_t *g_pos = hb_buffer_get_glyph_positions(hb_buffer, &positions_len);
 
@@ -235,7 +230,7 @@ int PlayMode::load_page2display(int page_number){
 		if ((hacky_line_len + MARGIN) > WIDTH){
 			pen.x = PEN_X_START;
 			pen.y -= FONT_SIZE * CHAR_RESOLUTION;
-			std::cout << "pen.y: " << pen.y << std::endl;
+			// std::cout << "pen.y: " << pen.y << std::endl;
 			hacky_line_len = 0;
 		}else{
 			pen.x += slot->advance.x;
@@ -280,7 +275,7 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
 
 	load_story();
-	if (load_full_page(0) != 0){
+	if (load_full_page(current_page) != 0){
 		std::cout << "no" << std::endl;
 	}
 
@@ -293,113 +288,56 @@ PlayMode::~PlayMode() {
 bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size) {
 
 	if (evt.type == SDL_KEYDOWN) {
-		if (evt.key.keysym.sym == SDLK_ESCAPE) {
-			SDL_SetRelativeMouseMode(SDL_FALSE);
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_a) {
+		if (evt.key.keysym.sym == SDLK_1){
+			std::cout << "KEYdown 1" << std::endl;
 			left.downs += 1;
 			left.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
+		}
+		else if (evt.key.keysym.sym == SDLK_2){
+			std::cout << "KEYdown 2" << std::endl;
 			right.downs += 1;
 			right.pressed = true;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.downs += 1;
-			up.pressed = true;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.downs += 1;
-			down.pressed = true;
-			return true;
 		}
+
 	} else if (evt.type == SDL_KEYUP) {
-		if (evt.key.keysym.sym == SDLK_a) {
+		if (evt.key.keysym.sym == SDLK_1) {
+			// std::cout << "KEYUP 1" << std::endl;
 			left.pressed = false;
+			change_tex = true;
+			int get_opt_1 = Story.at(current_page).dest_page_1;
+			load_full_page(get_opt_1);
+			std::cout << "loading page " << get_opt_1 << std::endl;
+			
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_d) {
+		} else if (evt.key.keysym.sym == SDLK_2) {
+			// std::cout << "KEYUP 2" << std::endl;
 			right.pressed = false;
+			change_tex = true;
+			int get_opt_2 = Story.at(current_page).dest_page_1;
+			load_full_page(get_opt_2);
+			std::cout << "loading page " << get_opt_2 << std::endl;
 			return true;
-		} else if (evt.key.keysym.sym == SDLK_w) {
-			up.pressed = false;
-			return true;
-		} else if (evt.key.keysym.sym == SDLK_s) {
-			down.pressed = false;
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEBUTTONDOWN) {
-		if (SDL_GetRelativeMouseMode() == SDL_FALSE) {
-			SDL_SetRelativeMouseMode(SDL_TRUE);
-			return true;
-		}
-	} else if (evt.type == SDL_MOUSEMOTION) {
-		if (SDL_GetRelativeMouseMode() == SDL_TRUE) {
-			glm::vec2 motion = glm::vec2(
-				evt.motion.xrel / float(window_size.y),
-				-evt.motion.yrel / float(window_size.y)
-			);
-			camera->transform->rotation = glm::normalize(
-				camera->transform->rotation
-				* glm::angleAxis(-motion.x * camera->fovy, glm::vec3(0.0f, 1.0f, 0.0f))
-				* glm::angleAxis(motion.y * camera->fovy, glm::vec3(1.0f, 0.0f, 0.0f))
-			);
-			return true;
-		}
-	}
+		} 
+
+	} 
 
 	return false;
 }
 
 void PlayMode::update(float elapsed) {
 
-	//slowly rotates through [0,1):
-	wobble += elapsed / 10.0f;
-	wobble -= std::floor(wobble);
-
-	hip->rotation = hip_base_rotation * glm::angleAxis(
-		glm::radians(5.0f * std::sin(wobble * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-	upper_leg->rotation = upper_leg_base_rotation * glm::angleAxis(
-		glm::radians(7.0f * std::sin(wobble * 2.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	lower_leg->rotation = lower_leg_base_rotation * glm::angleAxis(
-		glm::radians(10.0f * std::sin(wobble * 3.0f * 2.0f * float(M_PI))),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-
-	//move sound to follow leg tip position:
-	leg_tip_loop->set_position(get_leg_tip_position(), 1.0f / 60.0f);
-
-	//move camera:
-	{
-
-		//combine inputs into a move:
-		constexpr float PlayerSpeed = 30.0f;
-		glm::vec2 move = glm::vec2(0.0f);
-		if (left.pressed && !right.pressed) move.x =-1.0f;
-		if (!left.pressed && right.pressed) move.x = 1.0f;
-		if (down.pressed && !up.pressed) move.y =-1.0f;
-		if (!down.pressed && up.pressed) move.y = 1.0f;
-
-		//make it so that moving diagonally doesn't go faster:
-		if (move != glm::vec2(0.0f)) move = glm::normalize(move) * PlayerSpeed * elapsed;
-
-		glm::mat4x3 frame = camera->transform->make_local_to_parent();
-		glm::vec3 frame_right = frame[0];
-		//glm::vec3 up = frame[1];
-		glm::vec3 frame_forward = -frame[2];
-
-		camera->transform->position += move.x * frame_right + move.y * frame_forward;
-	}
-
-	{ //update listener to camera position:
-		glm::mat4x3 frame = camera->transform->make_local_to_parent();
-		glm::vec3 frame_right = frame[0];
-		glm::vec3 frame_at = frame[3];
-		Sound::listener.set_position_right(frame_at, frame_right, 1.0f / 60.0f);
-	}
+	// if (left.pressed && !right.pressed){
+	// 	int get_opt_1 = Story.at(current_page).dest_page_1;
+	// 	load_full_page(get_opt_1);
+	// 	std::cout << "loading page " << get_opt_1 << std::endl;
+	// }
+	// else if (!left.pressed && right.pressed){
+	// 	int get_opt_2 = Story.at(current_page).dest_page_1;
+	// 	load_full_page(get_opt_2);
+	// 	std::cout << "loading page " << get_opt_2 << std::endl;
+	// }
 
 	//reset button press counters:
 	left.downs = 0;
@@ -474,7 +412,8 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 
 	static GLuint tex = 0;
-	if (tex == 0) {
+	if (tex == 0 || change_tex == true) {
+
 		glGenTextures(1, &tex);
 
 		glBindTexture(GL_TEXTURE_2D, tex);
@@ -490,7 +429,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	}
 
 	static GLuint buffer = 0;
-	if (buffer == 0) {
+	if (buffer == 0 || change_tex == true) {
 		glGenBuffers(1, &buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer);
 		//actually nothing to do right now just wanted to bind it for illustrative purposes
@@ -507,7 +446,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	auto &program = texture_program;
 
 	static GLuint vao = 0;
-	if (vao == 0) {
+	if (vao == 0 || change_tex == true ) {
 		//based on PPU466.cpp
 
 		glGenVertexArrays(1, &vao);
@@ -538,6 +477,10 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		glBindVertexArray(0);
+	}
+
+	if (change_tex == true){
+		change_tex = false;
 	}
 
 

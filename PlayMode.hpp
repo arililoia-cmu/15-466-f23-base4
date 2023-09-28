@@ -31,8 +31,6 @@ struct Page{
 	std::string page_text;
 	int dest_page_1;
 	int dest_page_2;
-	std::string option_1;
-	std::string option_2;
 };
 
 struct PlayMode : Mode {
@@ -48,7 +46,8 @@ struct PlayMode : Mode {
 	int load_page2display(int page_number);
 	// int load_choices2display(int page_number, int choice_number);
 	int load_full_page(int page_number);
-
+	int current_page = 0;
+	bool change_tex = true;
 	//----- game state -----
 
 	//input tracking:
