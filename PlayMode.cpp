@@ -71,7 +71,7 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 void PlayMode::load_story(){
 	// import choices
 	// std::cout << "load story" << std::endl;
-	std::ifstream file("dist/choices.csv");
+	std::ifstream file(data_path("choices.csv"));
 	if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
     }
@@ -169,8 +169,8 @@ int PlayMode::load_page2display(int page_number){
 		return 1;
 	}
 
-	const char* font_path = "Roboto-Regular.ttf";
-	if (FT_New_Face(library, font_path, 0, &face) != 0){
+	// const char* font_path = data_path("Roboto-Regular.ttf");
+	if (FT_New_Face(library, data_path("Roboto-Regular.ttf").c_str(), 0, &face) != 0){
 		std::cerr << "bad face " << std::endl;
 		return 1;
 	}
