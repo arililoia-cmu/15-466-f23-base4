@@ -1,22 +1,24 @@
-# (TODO: your game's title)
+# Text Adventure
 
-Author: (TODO: your name)
+Author: Ari Liloia
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: My game is a text-based adventure game that presents the user with two options regarding how to proceed.
 
-Text Drawing: (TODO: how does the text drawing in this game work? Is text precomputed? Rendered at runtime? What files or utilities are involved?)
+Text Drawing: A "choices.csv" file with the text to be displayed on the screen and the destination pages for choice 1 or 2 is loaded at the beginning of the game. When a new page is loaded, the text is shaped using harfbuzz, converted to a bitmap with freetype, and converted to pixels and displayed as a texture using OpenGL. 
+Text is rendered at runtime whenever a page is changed. The files involved are dist/choices.csv, and the actual rendering is done in PlayMode.cpp. 
 
-Choices: (TODO: how does the game store choices and narrative? How are they authored? Anything nifty you want to point out?)
+Choices: The game stores choices and narrative in a vector of Page structs; each Page contains the text to display, its own page number, and the page numbers of the two choices outlined in the text. Each page is loaded from a line of dist/choices.csv. I wanted to display the choices on separate lines of text, smaller, and with a different color, but didn't have time to implement this. 
 
 Screen Shot:
-
 ![Screen Shot](screenshot.png)
 
 How To Play:
+Press 1 to choose the first option and 2 to choose the second. Play until bored.
 
-(TODO: describe the controls and (if needed) goals/strategy.)
-
-Sources: (TODO: list a source URL for any assets you did not create yourself. Make sure you have a license for the asset.)
+Sources: 
+I used the Roboto Regular font by Christian Robertson:
+https://fonts.google.com/specimen/Roboto
+A license (LICENSE.txt) is included in dist/game and in the home directory.
 
 This game was built with [NEST](NEST.md).
 

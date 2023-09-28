@@ -27,11 +27,8 @@
 // #include <string>
 
 #define FONT_SIZE  50
-// #define FONT_SIZE2  30
 #define FONT_SCALE 64
 #define CHAR_RESOLUTION 64
-// #define MAX_QUESTION_BITMAP_LENGTH 100
-// #define MAX_QUESTION_BITMAP_HEIGHT 50
 #define WIDTH   1280
 #define HEIGHT  720
 #define MARGIN 30
@@ -40,29 +37,6 @@
 #define PAGE_TEXT_END 200
 unsigned char image[HEIGHT][WIDTH];
 
-// GLuint hexapod_meshes_for_lit_color_texture_program = 0;
-// Load< MeshBuffer > hexapod_meshes(LoadTagDefault, []() -> MeshBuffer const * {
-// 	MeshBuffer const *ret = new MeshBuffer(data_path("hexapod.pnct"));
-// 	hexapod_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
-// 	return ret;
-// });
-
-// Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
-// 	return new Scene(data_path("hexapod.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
-// 		Mesh const &mesh = hexapod_meshes->lookup(mesh_name);
-
-// 		scene.drawables.emplace_back(transform);
-// 		Scene::Drawable &drawable = scene.drawables.back();
-
-// 		drawable.pipeline = lit_color_texture_program_pipeline;
-
-// 		drawable.pipeline.vao = hexapod_meshes_for_lit_color_texture_program;
-// 		drawable.pipeline.type = mesh.type;
-// 		drawable.pipeline.start = mesh.start;
-// 		drawable.pipeline.count = mesh.count;
-
-// 	});
-// });
 
 Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("bugsim_music.wav"));
@@ -115,21 +89,18 @@ void PlayMode::load_story(){
 	for (int i=0; i<(Story.size()); i++){
 		std::cout << Story.at(i).page_number << " " <<  Story.at(i).dest_page_1 << " " <<  Story.at(i).dest_page_2 << std::endl;
 	}
-	// std::cout << " before file close"  << std::endl;
+
 	file.close();
 }
 
+
+// draw_bitmap code taken from the  linked `example1.c` file from this tutorial:
+// https://freetype.org/freetype2/docs/tutorial/step1.html
 void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
  
   FT_Int  i, j, p, q;
   FT_Int  x_max = x + bitmap->width;
   FT_Int  y_max = y + bitmap->rows;
-
-
-  /* for simplicity, we assume that `bitmap->pixel_mode' */
-//   /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
-//   std::cout << "x, xmax =  " << x << " " << x_max << std::endl;
-//   std::cout << "y, ymax =  " << y << " " << y_max << std::endl;
 
   for ( i = x, p = 0; i < x_max; i++, p++ ){
     for ( j = y, q = 0; j < y_max; j++, q++ ){
@@ -164,12 +135,17 @@ int PlayMode::load_full_page(int page_number){
 // load the page we want to display into an image
 int PlayMode::load_page2display(int page_number){
 	// std::cout << "load_page2display" << std::endl;
+
+
+	// code based on freetype tutorial begins here:
+	// https://freetype.org/freetype2/docs/tutorial/step1.html
 	if (FT_Init_FreeType( &library ) != 0){
 		std::cerr << "fucked up initailzating freetype " << std::endl;
 		return 1;
 	}
 
-	// const char* font_path = data_path("Roboto-Regular.ttf");
+	// Roboto Regular font designed by Christian Robertson taken from here:
+	// https://fonts.google.com/specimen/Roboto
 	if (FT_New_Face(library, data_path("Roboto-Regular.ttf").c_str(), 0, &face) != 0){
 		std::cerr << "bad face " << std::endl;
 		return 1;
@@ -180,13 +156,15 @@ int PlayMode::load_page2display(int page_number){
 		return 1;
 	}
 
+	/// code based on harfbuzz tutorial begins here:
+	// https://github.com/harfbuzz/harfbuzz-tutorial/blob/master/hello-harfbuzz-freetype.c
 	hb_font_t *hb_font;
 	hb_font = hb_ft_font_create_referenced(face);
 	hb_buffer_t *hb_buffer;
 	hb_buffer = hb_buffer_create();
 
+	// char conversion idea from this stackexchange post:
 	// https://stackoverflow.com/questions/347949/how-to-convert-a-stdstring-to-const-char-or-char
-	// std::cout << Story.at(0).page_text << std::endl;
 	const char *text = Story.at(page_number).page_text.c_str();
 	// std::cout << text << std::endl;
 	hb_buffer_add_utf8(hb_buffer, text, -1, 0, -1);
@@ -253,29 +231,14 @@ int PlayMode::load_page2display(int page_number){
 	}
 
 	FT_Done_FreeType(library);
+	// code based on freetype tutorial linked above ends here:
+
 	return 0;
 
 }
 
 
 PlayMode::PlayMode()  {
-	//get pointers to leg for convenience:
-	// for (auto &transform : scene.transforms) {
-	// 	if (transform.name == "Hip.FL") hip = &transform;
-	// 	else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
-	// 	else if (transform.name == "LowerLeg.FL") lower_leg = &transform;
-	// }
-	// if (hip == nullptr) throw std::runtime_error("Hip not found.");
-	// if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
-	// if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
-
-	// hip_base_rotation = hip->rotation;
-	// upper_leg_base_rotation = upper_leg->rotation;
-	// lower_leg_base_rotation = lower_leg->rotation;
-
-	// //get pointer to camera for convenience:
-	// if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
-	// camera = &scene.cameras.front();
 
 	//start music loop playing:
 	// (note: position will be over-ridden in update())
@@ -336,16 +299,6 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 void PlayMode::update(float elapsed) {
 
-	// if (left.pressed && !right.pressed){
-	// 	int get_opt_1 = Story.at(current_page).dest_page_1;
-	// 	load_full_page(get_opt_1);
-	// 	std::cout << "loading page " << get_opt_1 << std::endl;
-	// }
-	// else if (!left.pressed && right.pressed){
-	// 	int get_opt_2 = Story.at(current_page).dest_page_1;
-	// 	load_full_page(get_opt_2);
-	// 	std::cout << "loading page " << get_opt_2 << std::endl;
-	// }
 
 	//reset button press counters:
 	left.downs = 0;
@@ -355,49 +308,6 @@ void PlayMode::update(float elapsed) {
 }
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
-	//update camera aspect ratio for drawable:
-	// camera->aspect = float(drawable_size.x) / float(drawable_size.y);
-
-	// //set up light type and position for lit_color_texture_program:
-	// // TODO: consider using the Light(s) in the scene to do this
-	// glUseProgram(lit_color_texture_program->program);
-	// glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
-	// glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
-	// glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
-	// glUseProgram(0);
-
-	// glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-	// glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// glEnable(GL_DEPTH_TEST);
-	// glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
-
-	// scene.draw(*camera);
-
-	// { //use DrawLines to overlay some text:
-	// 	glDisable(GL_DEPTH_TEST);
-	// 	float aspect = float(drawable_size.x) / float(drawable_size.y);
-	// 	DrawLines lines(glm::mat4(
-	// 		1.0f / aspect, 0.0f, 0.0f, 0.0f,
-	// 		0.0f, 1.0f, 0.0f, 0.0f,
-	// 		0.0f, 0.0f, 1.0f, 0.0f,
-	// 		0.0f, 0.0f, 0.0f, 1.0f
-	// 	));
-
-	// 	constexpr float H = 0.09f;
-	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-	// 		glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	// 		glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-	// 	float ofs = 2.0f / drawable_size.y;
-	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-	// 		glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
-	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-	// 		glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-	// }
-	// GL_ERRORS();
-
 
 	// code developed in office hours with Prof. Jim McCann starts here
 	//----------------------------------------------
@@ -536,7 +446,3 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 }
 
-glm::vec3 PlayMode::get_leg_tip_position() {
-	//the vertex position here was read from the model in blender:
-	return lower_leg->make_local_to_world() * glm::vec4(-1.26137f, -11.861f, 0.0f, 1.0f);
-}
