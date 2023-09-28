@@ -26,15 +26,16 @@
 // #include <vector>
 // #include <string>
 
-#define FONT_SIZE  25
+#define FONT_SIZE  50
 #define FONT_SCALE 64
-#define CHAR_RESOLUTION 38
-#define MAX_QUESTION_BITMAP_LENGTH 100
-#define MAX_QUESTION_BITMAP_HEIGHT 50
+#define CHAR_RESOLUTION 64
+// #define MAX_QUESTION_BITMAP_LENGTH 100
+// #define MAX_QUESTION_BITMAP_HEIGHT 50
 #define WIDTH   1280
 #define HEIGHT  720
-#define PEN_X_START 59 * 32
-#define PEN_Y_START 50 * 32
+#define MARGIN 30
+#define PEN_X_START (MARGIN * CHAR_RESOLUTION)
+#define PEN_Y_START (HEIGHT - (FONT_SIZE + MARGIN)) * CHAR_RESOLUTION
 unsigned char image[HEIGHT][WIDTH];
 
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
@@ -119,9 +120,9 @@ void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
 
 
   /* for simplicity, we assume that `bitmap->pixel_mode' */
-  /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
-  std::cout << "x, xmax =  " << x << " " << x_max << std::endl;
-  std::cout << "y, ymax =  " << y << " " << y_max << std::endl;
+//   /* is `FT_PIXEL_MODE_GRAY' (i.e., not a bitmap font)   */
+//   std::cout << "x, xmax =  " << x << " " << x_max << std::endl;
+//   std::cout << "y, ymax =  " << y << " " << y_max << std::endl;
 
   for ( i = x, p = 0; i < x_max; i++, p++ ){
     for ( j = y, q = 0; j < y_max; j++, q++ ){
@@ -143,7 +144,7 @@ int PlayMode::load_page2display(int page_number){
 		return 1;
 	}
 
-	const char* font_path = "/Users/arililoia/CarnegieMellonCS/game-programming/my-game4/Roboto-Regular.ttf";
+	const char* font_path = "Roboto-Regular.ttf";
 	if (FT_New_Face(library, font_path, 0, &face) != 0){
 		std::cerr << "bad face " << std::endl;
 		return 1;
@@ -161,7 +162,7 @@ int PlayMode::load_page2display(int page_number){
 
 	// https://stackoverflow.com/questions/347949/how-to-convert-a-stdstring-to-const-char-or-char
 	// std::cout << Story.at(0).page_text << std::endl;
-	const char *text = Story.at(0).page_text.c_str();
+	const char *text = Story.at(page_number).page_text.c_str();
 	// std::cout << text << std::endl;
 	hb_buffer_add_utf8(hb_buffer, text, -1, 0, -1);
 	hb_buffer_guess_segment_properties(hb_buffer);
@@ -182,7 +183,7 @@ int PlayMode::load_page2display(int page_number){
 	FT_Vector     pen;   
 	pen.x = PEN_X_START;
     pen.y = PEN_Y_START;
-
+	int hacky_line_len = 0;
 	for (int i=0; i<info_len; i++){
 
 		FT_Set_Transform( face, NULL, &pen );
@@ -194,13 +195,28 @@ int PlayMode::load_page2display(int page_number){
 
 		int target_height = HEIGHT;
 		
+
+		std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
+		std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
+		std::cout << "slot->advance.x: " << slot->advance.x/64. << std::endl;
+
 		draw_bitmap( &slot->bitmap,
                  slot->bitmap_left,
                  target_height - slot->bitmap_top );
 
 		/* increment pen position */
-		pen.x += slot->advance.x;
-		pen.y += slot->advance.y;
+		hacky_line_len += slot->advance.x/64. + 2;
+
+		// if ((pen.x + slot->advance.x + MARGIN + 10) >= WIDTH){
+		if ((hacky_line_len + MARGIN) > WIDTH){
+			pen.x = PEN_X_START;
+			pen.y -= FONT_SIZE * CHAR_RESOLUTION;
+			hacky_line_len = 0;
+		}else{
+			pen.x += slot->advance.x;
+			pen.y += slot->advance.y;
+		}
+		
 
 	}
 	// show_image();
@@ -419,7 +435,7 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	// generate huge tex_data
 	std::vector< glm::u8vec4 > tex_data;
-	for (int row=0; row<HEIGHT; row++){
+	for (int row=HEIGHT; row>0; row--){
 		for (int col=0; col<WIDTH; col++){
 			if (image[row][col] == 0){
 				tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
@@ -428,23 +444,9 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 			}
 		}
 	}
-	// int wxh = (WIDTH * HEIGHT);
-	// for (int i=0; i<wxh; i++){
-	// 	if ()
-	// 	tex_data.push_back(glm::u8vec4(0x00, 0x00, 0x00, 0xff));
-	// 	tex_data.push_back(glm::u8vec4(0xff, 0x00, 0x00, 0xff));
-	// 	tex_data.push_back(glm::u8vec4(0xff, 0xff, 0xff, 0xff));
-	// }
 
 
 
-	// std::vector< glm::u8vec4 > tex_data{
-	// 		glm::u8vec4(0xff, 0x00, 0x00, 0xff), glm::u8vec4(0x44, 0x44, 0x44, 0xff),
-	// 		glm::u8vec4(0x44, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0xff, 0x00, 0xff),
-	// 		glm::u8vec4(0xf4, 0x00, 0x00, 0xff), glm::u8vec4(0x42, 0x04, 0x44, 0xff),
-	// 		glm::u8vec4(0x94, 0x00, 0x00, 0xff), glm::u8vec4(0x00, 0x8f, 0x00, 0xff)
-	// 	};
-		
 
 	static GLuint tex = 0;
 	if (tex == 0) {
@@ -516,11 +518,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 
 	//actually draw some textured quads!
 	std::vector< Vert > attribs;
-
-	// attribs.emplace_back(glm::vec3(-0.5f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
-	// attribs.emplace_back(glm::vec3(-0.5f,  1.0f, 0.0f), glm::vec2(0.0f, 2.0f));
-	// attribs.emplace_back(glm::vec3( 1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 0.0f));
-	// attribs.emplace_back(glm::vec3( 1.0f,  1.0f, 0.0f), glm::vec2(1.0f, 2.0f));
 
 	attribs.emplace_back(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 0.0f));
 	attribs.emplace_back(glm::vec3(-1.0f,  1.0f, 0.0f), glm::vec2(0.0f, 1.0f));
