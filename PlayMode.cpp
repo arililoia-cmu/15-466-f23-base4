@@ -27,6 +27,7 @@
 // #include <string>
 
 #define FONT_SIZE  50
+// #define FONT_SIZE2  30
 #define FONT_SCALE 64
 #define CHAR_RESOLUTION 64
 // #define MAX_QUESTION_BITMAP_LENGTH 100
@@ -36,6 +37,7 @@
 #define MARGIN 30
 #define PEN_X_START (MARGIN * CHAR_RESOLUTION)
 #define PEN_Y_START (HEIGHT - (FONT_SIZE + MARGIN)) * CHAR_RESOLUTION
+#define PAGE_TEXT_END 360
 unsigned char image[HEIGHT][WIDTH];
 
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
@@ -68,6 +70,7 @@ Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample c
 
 void PlayMode::load_story(){
 	// import choices
+	std::cout << "load story" << std::endl;
 	std::ifstream file("dist/choices.csv");
 	if (!file.is_open()) {
         std::cerr << "Error opening file." << std::endl;
@@ -80,9 +83,9 @@ void PlayMode::load_story(){
 	while(std::getline(file, choice_row, '\n')) {
 		// would be better to allocate everything in memory first given
 		// the number of csv rows
+		std::cout << "get line of story" << std::endl;
 		Page one_page;
-		std::vector<Choice> page_choices;
-		Choice one_choice;
+
 		// csv reading code inspired by:
 		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
 		std::istringstream stream(choice_row);
@@ -93,22 +96,25 @@ void PlayMode::load_story(){
 			else if (acc == 1){
 				one_page.page_text = choice_element;
 			}
-			else{
-				if (acc%2 == 0){
-					one_choice.dest_page = stoi(choice_element);
-				}
-				else if (acc%2 == 1){
-					one_choice.option = choice_element;
-					page_choices.push_back(one_choice);
-				}
+			else if (acc == 2){
+				one_page.dest_page_1 = stoi(choice_element);
+			}
+			else if (acc == 3){
+				one_page.option_1 = choice_element;
+			}
+			else if (acc == 4){
+				one_page.dest_page_2 = stoi(choice_element);
+			}
+			else if (acc == 5){
+				one_page.option_2 = choice_element;
 			}
 			acc++;
 		}
-		one_page.page_choices = page_choices;
 		Story.push_back(one_page);
 		acc = 0;
 	
 	}
+	std::cout << " before file close"  << std::endl;
 	file.close();
 }
 
@@ -134,11 +140,30 @@ void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
   }
 }
 
+void PlayMode::zero_out_image_buffer(){
+	std::cout << "zoob" << std::endl;
+	for (int i=0; i<HEIGHT; i++){
+		for (int j=0; j<WIDTH; j++){
+			image[i][j] = 0;
+		}
+	}
+}
+
+int PlayMode::load_full_page(int page_number){
+	// std::cout << 'zoob' << std::endl;
+	zero_out_image_buffer();
+	std::cout << "loadfullpage" << std::endl;
+	if (load_page2display(page_number) != 0){
+		return 1;
+	}
+	return 0;
+
+}
 
 
 // load the page we want to display into an image
 int PlayMode::load_page2display(int page_number){
-
+	std::cout << "load_page2display" << std::endl;
 	if (FT_Init_FreeType( &library ) != 0){
 		std::cerr << "fucked up initailzating freetype " << std::endl;
 		return 1;
@@ -177,7 +202,6 @@ int PlayMode::load_page2display(int page_number){
 	// unsigned int positions_len;
 	// hb_glyph_position_t *g_pos = hb_buffer_get_glyph_positions(hb_buffer, &positions_len);
 
-
 	FT_GlyphSlot slot = face->glyph;
 
 	FT_Vector     pen;   
@@ -196,9 +220,9 @@ int PlayMode::load_page2display(int page_number){
 		int target_height = HEIGHT;
 		
 
-		std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
-		std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
-		std::cout << "slot->advance.x: " << slot->advance.x/64. << std::endl;
+		// std::cout << "slot->bitmap_left: " << slot->bitmap_left << std::endl;
+		// std::cout << "slot->bitmap_top: " << slot->bitmap_top << std::endl;
+		// std::cout << "slot->advance.x: " << slot->advance.x/64. << std::endl;
 
 		draw_bitmap( &slot->bitmap,
                  slot->bitmap_left,
@@ -211,20 +235,22 @@ int PlayMode::load_page2display(int page_number){
 		if ((hacky_line_len + MARGIN) > WIDTH){
 			pen.x = PEN_X_START;
 			pen.y -= FONT_SIZE * CHAR_RESOLUTION;
+			std::cout << "pen.y: " << pen.y << std::endl;
 			hacky_line_len = 0;
 		}else{
 			pen.x += slot->advance.x;
 			pen.y += slot->advance.y;
 		}
-		
 
+		if (pen.y <= PAGE_TEXT_END * CHAR_RESOLUTION){
+			FT_Done_FreeType(library);
+			return 0;
+		}
+
+	
 	}
-	// show_image();
 
-
-	// in class:
 	FT_Done_FreeType(library);
-
 	return 0;
 
 }
@@ -254,11 +280,10 @@ PlayMode::PlayMode() : scene(*hexapod_scene) {
 	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
 
 	load_story();
-	if (load_page2display(0) != 0){
+	if (load_full_page(0) != 0){
 		std::cout << "no" << std::endl;
 	}
-		
-	std::cout << "Story[0].page_choices[0].option: " << Story[0].page_choices[0].option << std::endl;
+
 }
 
 

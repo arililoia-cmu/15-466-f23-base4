@@ -21,15 +21,18 @@
 #include <vector>
 #include <string>
 
-struct Choice {
-	int dest_page;
-	std::string option;
-};
+// struct Choice {
+// 	int dest_page;
+// 	std::string option;
+// };
 
 struct Page{
 	int page_number;
 	std::string page_text;
-	std::vector<Choice> page_choices;
+	int dest_page_1;
+	int dest_page_2;
+	std::string option_1;
+	std::string option_2;
 };
 
 struct PlayMode : Mode {
@@ -41,7 +44,10 @@ struct PlayMode : Mode {
 	virtual void update(float elapsed) override;
 	virtual void draw(glm::uvec2 const &drawable_size) override;
 	void load_story();
+	void zero_out_image_buffer();
 	int load_page2display(int page_number);
+	// int load_choices2display(int page_number, int choice_number);
+	int load_full_page(int page_number);
 
 	//----- game state -----
 
