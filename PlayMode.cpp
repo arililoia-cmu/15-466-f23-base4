@@ -40,29 +40,29 @@
 #define PAGE_TEXT_END 200
 unsigned char image[HEIGHT][WIDTH];
 
-GLuint hexapod_meshes_for_lit_color_texture_program = 0;
-Load< MeshBuffer > hexapod_meshes(LoadTagDefault, []() -> MeshBuffer const * {
-	MeshBuffer const *ret = new MeshBuffer(data_path("hexapod.pnct"));
-	hexapod_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
-	return ret;
-});
+// GLuint hexapod_meshes_for_lit_color_texture_program = 0;
+// Load< MeshBuffer > hexapod_meshes(LoadTagDefault, []() -> MeshBuffer const * {
+// 	MeshBuffer const *ret = new MeshBuffer(data_path("hexapod.pnct"));
+// 	hexapod_meshes_for_lit_color_texture_program = ret->make_vao_for_program(lit_color_texture_program->program);
+// 	return ret;
+// });
 
-Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
-	return new Scene(data_path("hexapod.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
-		Mesh const &mesh = hexapod_meshes->lookup(mesh_name);
+// Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
+// 	return new Scene(data_path("hexapod.scene"), [&](Scene &scene, Scene::Transform *transform, std::string const &mesh_name){
+// 		Mesh const &mesh = hexapod_meshes->lookup(mesh_name);
 
-		scene.drawables.emplace_back(transform);
-		Scene::Drawable &drawable = scene.drawables.back();
+// 		scene.drawables.emplace_back(transform);
+// 		Scene::Drawable &drawable = scene.drawables.back();
 
-		drawable.pipeline = lit_color_texture_program_pipeline;
+// 		drawable.pipeline = lit_color_texture_program_pipeline;
 
-		drawable.pipeline.vao = hexapod_meshes_for_lit_color_texture_program;
-		drawable.pipeline.type = mesh.type;
-		drawable.pipeline.start = mesh.start;
-		drawable.pipeline.count = mesh.count;
+// 		drawable.pipeline.vao = hexapod_meshes_for_lit_color_texture_program;
+// 		drawable.pipeline.type = mesh.type;
+// 		drawable.pipeline.start = mesh.start;
+// 		drawable.pipeline.count = mesh.count;
 
-	});
-});
+// 	});
+// });
 
 Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample const * {
 	return new Sound::Sample(data_path("bugsim_music.wav"));
@@ -258,28 +258,28 @@ int PlayMode::load_page2display(int page_number){
 }
 
 
-PlayMode::PlayMode() : scene(*hexapod_scene) {
+PlayMode::PlayMode()  {
 	//get pointers to leg for convenience:
-	for (auto &transform : scene.transforms) {
-		if (transform.name == "Hip.FL") hip = &transform;
-		else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
-		else if (transform.name == "LowerLeg.FL") lower_leg = &transform;
-	}
-	if (hip == nullptr) throw std::runtime_error("Hip not found.");
-	if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
-	if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
+	// for (auto &transform : scene.transforms) {
+	// 	if (transform.name == "Hip.FL") hip = &transform;
+	// 	else if (transform.name == "UpperLeg.FL") upper_leg = &transform;
+	// 	else if (transform.name == "LowerLeg.FL") lower_leg = &transform;
+	// }
+	// if (hip == nullptr) throw std::runtime_error("Hip not found.");
+	// if (upper_leg == nullptr) throw std::runtime_error("Upper leg not found.");
+	// if (lower_leg == nullptr) throw std::runtime_error("Lower leg not found.");
 
-	hip_base_rotation = hip->rotation;
-	upper_leg_base_rotation = upper_leg->rotation;
-	lower_leg_base_rotation = lower_leg->rotation;
+	// hip_base_rotation = hip->rotation;
+	// upper_leg_base_rotation = upper_leg->rotation;
+	// lower_leg_base_rotation = lower_leg->rotation;
 
-	//get pointer to camera for convenience:
-	if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
-	camera = &scene.cameras.front();
+	// //get pointer to camera for convenience:
+	// if (scene.cameras.size() != 1) throw std::runtime_error("Expecting scene to have exactly one camera, but it has " + std::to_string(scene.cameras.size()));
+	// camera = &scene.cameras.front();
 
 	//start music loop playing:
 	// (note: position will be over-ridden in update())
-	leg_tip_loop = Sound::loop_3D(*dusty_floor_sample, 1.0f, get_leg_tip_position(), 10.0f);
+	leg_tip_loop = Sound::loop(*dusty_floor_sample, 1.0f, 0.0f);
 
 	load_story();
 	if (load_full_page(current_page) != 0){
