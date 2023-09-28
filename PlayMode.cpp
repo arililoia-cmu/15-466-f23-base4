@@ -65,7 +65,7 @@ Load< Scene > hexapod_scene(LoadTagDefault, []() -> Scene const * {
 });
 
 Load< Sound::Sample > dusty_floor_sample(LoadTagDefault, []() -> Sound::Sample const * {
-	return new Sound::Sample(data_path("dusty-floor.opus"));
+	return new Sound::Sample(data_path("bugsim_music.wav"));
 });
 
 void PlayMode::load_story(){
@@ -356,47 +356,47 @@ void PlayMode::update(float elapsed) {
 
 void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//update camera aspect ratio for drawable:
-	camera->aspect = float(drawable_size.x) / float(drawable_size.y);
+	// camera->aspect = float(drawable_size.x) / float(drawable_size.y);
 
-	//set up light type and position for lit_color_texture_program:
-	// TODO: consider using the Light(s) in the scene to do this
-	glUseProgram(lit_color_texture_program->program);
-	glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
-	glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
-	glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
-	glUseProgram(0);
+	// //set up light type and position for lit_color_texture_program:
+	// // TODO: consider using the Light(s) in the scene to do this
+	// glUseProgram(lit_color_texture_program->program);
+	// glUniform1i(lit_color_texture_program->LIGHT_TYPE_int, 1);
+	// glUniform3fv(lit_color_texture_program->LIGHT_DIRECTION_vec3, 1, glm::value_ptr(glm::vec3(0.0f, 0.0f,-1.0f)));
+	// glUniform3fv(lit_color_texture_program->LIGHT_ENERGY_vec3, 1, glm::value_ptr(glm::vec3(1.0f, 1.0f, 0.95f)));
+	// glUseProgram(0);
 
-	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
-	glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+	// glClearDepth(1.0f); //1.0 is actually the default value to clear the depth buffer to, but FYI you can change it.
+	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
+	// glEnable(GL_DEPTH_TEST);
+	// glDepthFunc(GL_LESS); //this is the default depth comparison function, but FYI you can change it.
 
-	scene.draw(*camera);
+	// scene.draw(*camera);
 
-	{ //use DrawLines to overlay some text:
-		glDisable(GL_DEPTH_TEST);
-		float aspect = float(drawable_size.x) / float(drawable_size.y);
-		DrawLines lines(glm::mat4(
-			1.0f / aspect, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f
-		));
+	// { //use DrawLines to overlay some text:
+	// 	glDisable(GL_DEPTH_TEST);
+	// 	float aspect = float(drawable_size.x) / float(drawable_size.y);
+	// 	DrawLines lines(glm::mat4(
+	// 		1.0f / aspect, 0.0f, 0.0f, 0.0f,
+	// 		0.0f, 1.0f, 0.0f, 0.0f,
+	// 		0.0f, 0.0f, 1.0f, 0.0f,
+	// 		0.0f, 0.0f, 0.0f, 1.0f
+	// 	));
 
-		constexpr float H = 0.09f;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
-			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			glm::u8vec4(0x00, 0x00, 0x00, 0x00));
-		float ofs = 2.0f / drawable_size.y;
-		lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
-			glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
-			glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
-			glm::u8vec4(0xff, 0xff, 0xff, 0x00));
-	}
-	GL_ERRORS();
+	// 	constexpr float H = 0.09f;
+	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+	// 		glm::vec3(-aspect + 0.1f * H, -1.0 + 0.1f * H, 0.0),
+	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+	// 		glm::u8vec4(0x00, 0x00, 0x00, 0x00));
+	// 	float ofs = 2.0f / drawable_size.y;
+	// 	lines.draw_text("Mouse motion rotates camera; WASD moves; escape ungrabs mouse",
+	// 		glm::vec3(-aspect + 0.1f * H + ofs, -1.0 + + 0.1f * H + ofs, 0.0),
+	// 		glm::vec3(H, 0.0f, 0.0f), glm::vec3(0.0f, H, 0.0f),
+	// 		glm::u8vec4(0xff, 0xff, 0xff, 0x00));
+	// }
+	// GL_ERRORS();
 
 
 	// code developed in office hours with Prof. Jim McCann starts here
