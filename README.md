@@ -19,6 +19,7 @@ Sources:
 I used the Roboto Regular font by Christian Robertson:
 https://fonts.google.com/specimen/Roboto
 A license (LICENSE.txt) is included in dist/game and in the home directory.
+Credit to code from online sources is given throughout.
 
 This game was built with [NEST](NEST.md).
 
