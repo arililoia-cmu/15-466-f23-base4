@@ -37,7 +37,7 @@
 #define MARGIN 30
 #define PEN_X_START (MARGIN * CHAR_RESOLUTION)
 #define PEN_Y_START (HEIGHT - (FONT_SIZE + MARGIN)) * CHAR_RESOLUTION
-#define PAGE_TEXT_END 700
+#define PAGE_TEXT_END 200
 unsigned char image[HEIGHT][WIDTH];
 
 GLuint hexapod_meshes_for_lit_color_texture_program = 0;
@@ -85,13 +85,13 @@ void PlayMode::load_story(){
 		// the number of csv rows
 		// std::cout << "get line of story" << std::endl;
 		Page one_page;
-		std::cout << "getting line " << std::endl;
+		// std::cout << "getting line " << std::endl;
 		// csv reading code inspired by:
 		// https://stackoverflow.com/questions/275355/c-reading-file-tokens#275405
 		std::istringstream stream(choice_row);
 		while (std::getline(stream, choice_element, ',')) {
-			std::cout << acc << std::endl;
-			std::cout << "choice_elementL: " << choice_element << std::endl;
+			// std::cout << acc << std::endl;
+			// std::cout << "choice_elementL: " << choice_element << std::endl;
 			if (acc == 0){
 				one_page.page_number = stoi(choice_element);
 			}
@@ -109,6 +109,11 @@ void PlayMode::load_story(){
 		Story.push_back(one_page);
 		acc = 0;
 	
+	}
+
+
+	for (int i=0; i<(Story.size()); i++){
+		std::cout << Story.at(i).page_number << " " <<  Story.at(i).dest_page_1 << " " <<  Story.at(i).dest_page_2 << std::endl;
 	}
 	// std::cout << " before file close"  << std::endl;
 	file.close();
@@ -137,7 +142,7 @@ void draw_bitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y){
 }
 
 void PlayMode::zero_out_image_buffer(){
-	std::cout << "zoob" << std::endl;
+	// std::cout << "zoob" << std::endl;
 	for (int i=0; i<HEIGHT; i++){
 		for (int j=0; j<WIDTH; j++){
 			image[i][j] = 0;
@@ -147,7 +152,7 @@ void PlayMode::zero_out_image_buffer(){
 
 int PlayMode::load_full_page(int page_number){
 	zero_out_image_buffer();
-	std::cout << "loadfullpage" << std::endl;
+	// std::cout << "loadfullpage" << std::endl;
 	if (load_page2display(page_number) != 0){
 		return 1;
 	}
@@ -203,8 +208,9 @@ int PlayMode::load_page2display(int page_number){
 	pen.x = PEN_X_START;
     pen.y = PEN_Y_START;
 	int hacky_line_len = 0;
+	// std::cout << "info_len:  " << info_len << std::endl;
 	for (int i=0; i<info_len; i++){
-
+		// std::cout << "i: "  << i << std::endl; 
 		FT_Set_Transform( face, NULL, &pen );
 
 		/* load glyph image into the slot (erase previous one) */
@@ -238,6 +244,7 @@ int PlayMode::load_page2display(int page_number){
 		}
 
 		if (pen.y <= PAGE_TEXT_END * CHAR_RESOLUTION){
+			std::cout << "pen.y <= PAGE_TEXT_END * CHAR_RESOLUTION: " << std::endl;
 			FT_Done_FreeType(library);
 			return 0;
 		}
@@ -289,13 +296,13 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 	if (evt.type == SDL_KEYDOWN) {
 		if (evt.key.keysym.sym == SDLK_1){
-			std::cout << "KEYdown 1" << std::endl;
+			// std::cout << "KEYdown 1" << std::endl;
 			left.downs += 1;
 			left.pressed = true;
 			return true;
 		}
 		else if (evt.key.keysym.sym == SDLK_2){
-			std::cout << "KEYdown 2" << std::endl;
+			// std::cout << "KEYdown 2" << std::endl;
 			right.downs += 1;
 			right.pressed = true;
 			return true;
@@ -303,19 +310,20 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 
 	} else if (evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.sym == SDLK_1) {
-			// std::cout << "KEYUP 1" << std::endl;
+			std::cout << "KEYUP 1" << std::endl;
 			left.pressed = false;
 			change_tex = true;
+			std::cout << "from page " << current_page;
 			int get_opt_1 = Story.at(current_page).dest_page_1;
 			load_full_page(get_opt_1);
-			std::cout << "loading page " << get_opt_1 << std::endl;
+			std::cout << " loading page " << get_opt_1 << std::endl;
 			
 			return true;
 		} else if (evt.key.keysym.sym == SDLK_2) {
-			// std::cout << "KEYUP 2" << std::endl;
+			std::cout << "KEYUP 2" << std::endl;
 			right.pressed = false;
 			change_tex = true;
-			int get_opt_2 = Story.at(current_page).dest_page_1;
+			int get_opt_2 = Story.at(current_page).dest_page_2;
 			load_full_page(get_opt_2);
 			std::cout << "loading page " << get_opt_2 << std::endl;
 			return true;
